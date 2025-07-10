@@ -1,7 +1,7 @@
 package com.example.hellothere.managers
 
 object MessageQueueManager {
-    private val messageQueue = mutableListOf<Pair<String, String>>() // botId to message
+    private val messageQueue = mutableListOf<Pair<String, String>>()
 
     fun queueMessage(botId: String, message: String) {
         messageQueue.add(Pair(botId, message))

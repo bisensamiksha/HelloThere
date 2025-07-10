@@ -41,7 +41,8 @@ class ChatBotAdapter(
         val chatbot = chatbotList[position]
 
         holder.nameText.text = chatbot.name
-        holder.latestMessage.text = if (chatbot.latestMessage.isBlank()) "No messages"  else chatbot.latestMessage
+        holder.latestMessage.text =
+            if (chatbot.latestMessage.isBlank()) "No messages" else chatbot.latestMessage
         holder.chatArea.visibility = if (chatbot.isExpanded) View.VISIBLE else View.GONE
         holder.latestMessage.visibility = if (chatbot.isExpanded) View.GONE else View.VISIBLE
         holder.expandIcon.rotation = if (chatbot.isExpanded) 180f else 0f
@@ -50,7 +51,12 @@ class ChatBotAdapter(
         holder.messageView.removeAllViews()
         chatbot.messages.forEach { msg ->
             val messageView = TextView(holder.itemView.context).apply {
-                text = if (msg.isUserMessage) "You: ${msg.text}" else "Bot: ${msg.text}"
+                if (msg.isQueued) {
+                    text =
+                        if (msg.isUserMessage) "You: ${msg.text} (queued)" else "Bot: ${msg.text}"
+                } else {
+                    text = if (msg.isUserMessage) "You: ${msg.text}" else "Bot: ${msg.text}"
+                }
                 setPadding(4, 4, 4, 4)
                 setTextColor(Color.BLACK)
             }

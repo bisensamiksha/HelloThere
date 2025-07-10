@@ -18,6 +18,13 @@
         android:clickable="true"
         android:focusable="true">
 
+        <ImageView
+            android:id="@+id/botIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/bot_icon"
+            android:layout_margin="5dp"/>
+
         <TextView
             android:id="@+id/chatbotName"
             android:layout_width="0dp"
@@ -25,13 +32,14 @@
             android:layout_weight="1"
             android:text="Chatbot Name"
             android:textStyle="bold"
+            android:textColor="@color/black"
             android:textSize="16sp"/>
 
         <ImageView
             android:id="@+id/expandIcon"
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:src="@android:drawable/arrow_down_float"/>
+            android:src="@drawable/outline_arrow_downward_24"/>
     </LinearLayout>
 
     <TextView
@@ -40,7 +48,8 @@
         android:layout_height="wrap_content"
         android:text="Latest message preview"
         android:textColor="@color/black"
-        android:layout_marginEnd="8dp"/>
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="5dp"/>
 
     <LinearLayout
         android:id="@+id/chatArea"
