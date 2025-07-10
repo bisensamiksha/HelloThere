@@ -1,5 +1,7 @@
-package com.example.hellothere
+package com.example.hellothere.network
 
+import android.util.Log
+import com.example.hellothere.managers.MessageQueueManager
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -7,7 +9,7 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import org.json.JSONObject
 
-class SocketManager (
+class SocketManager(
     private val onMessageReceived: (botId: String, message: String) -> Unit,
     private val onError: (String) -> Unit
 ) {
@@ -15,13 +17,16 @@ class SocketManager (
     private val client = OkHttpClient()
     private lateinit var webSocket: WebSocket
     private val request = Request.Builder()
-        .url("wss://s14919.blr1.piesocket.com/v3/1?api_key=fmNK3AScPYMuoIO9oOP3Q7O4jAtmBZJsYvrMvlIs&notify_self=1")
+        .url("wss://s14919.blr1.piesocket.com/v3/1?api_key=fmNK3AScPYMuoIO9oOP3Q7O4jAtmBZJsYvrMvlIs&notify_self=0")
         .build()
 
     fun connect() {
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                println("Socket connected ✅")
+                Log.d("WS", "Socket connected")
+                MessageQueueManager.flushQueue { botId, message ->
+                    sendMessage(botId, message)
+                }
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -48,7 +53,11 @@ class SocketManager (
         webSocket.send(json.toString())
     }
 
+    fun isConnected(): Boolean {
+        return this::webSocket.isInitialized
+    }
+
     fun disconnect() {
-        webSocket.cancel()
+        webSocket.close(1000, "App closed")
     }
 }

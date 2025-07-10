@@ -1,4 +1,4 @@
-package com.example.hellothere
+package com.example.hellothere.ui
 
 import android.os.Bundle
 import android.widget.Toast
@@ -6,12 +6,18 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.hellothere.managers.MessageQueueManager
+import com.example.hellothere.R
+import com.example.hellothere.network.SocketManager
 import com.example.hellothere.adapters.ChatBotAdapter
 import com.example.hellothere.models.ChatBot
 import com.example.hellothere.models.Message
+import com.google.android.material.materialswitch.MaterialSwitch
 
 class MainActivity : AppCompatActivity() {
 
+    private var simulateOffline = false
+    private lateinit var offlineToggle: MaterialSwitch
     private lateinit var recyclerView: RecyclerView
     private lateinit var chatBotAdapter: ChatBotAdapter
     private val chatBotList = mutableListOf<ChatBot>()
@@ -21,6 +27,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+        offlineToggle = findViewById(R.id.offlineToggle)
         recyclerView = findViewById(R.id.chatsListRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
@@ -44,10 +51,31 @@ class MainActivity : AppCompatActivity() {
         socketManager.connect()
 
         chatBotAdapter = ChatBotAdapter(chatBotList) { botId, message ->
-            handleSendMessage(botId, message)
+            sendMessage(botId, message)
         }
 
         recyclerView.adapter = chatBotAdapter
+
+        offlineToggle.setOnCheckedChangeListener { _, isChecked ->
+            simulateOffline = isChecked
+
+            if (!isChecked) {
+                Toast.makeText(this, "Simulated offline OFF. Flushing queue...", Toast.LENGTH_SHORT)
+                    .show()
+
+                if (::socketManager.isInitialized && socketManager.isConnected()) {
+                    MessageQueueManager.flushQueue { botId, message ->
+                        socketManager.sendMessage(botId, message)
+                    }
+                } else {
+                    Toast.makeText(this, "Still offline. Will retry later.", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            } else {
+                Toast.makeText(this, "Simulated offline ON", Toast.LENGTH_SHORT).show()
+            }
+        }
+
 
     }
 
@@ -59,14 +87,23 @@ class MainActivity : AppCompatActivity() {
         chatBotList.add(ChatBot("cb5", "CB5"))
     }
 
-    private fun handleSendMessage(botId: String, message: String){
+    private fun sendMessage(botId: String, message: String) {
         val bot = chatBotList.find { it.botId == botId } ?: return
         bot.messages.add(Message(message, isUserMessage = true))
         bot.latestMessage = message
         chatBotAdapter.notifyDataSetChanged()
 
-        socketManager.sendMessage(botId, message)
+        if (!simulateOffline && socketManager.isConnected()) {
+            socketManager.sendMessage(botId, message)
+        } else {
+            MessageQueueManager.queueMessage(botId, message)
+        }
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        socketManager.disconnect()
     }
 
 }
